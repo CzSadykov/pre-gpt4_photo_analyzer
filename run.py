@@ -1,33 +1,17 @@
 import os
 import json
 import telebot
-from PIL import Image
-
-from typing import Dict, List, Any, Union, Callable
-from pydantic import BaseModel, Field
 
 from langchain.chat_models import ChatOpenAI
-from langchain.llms import CerebriumAI
-from langchain import PromptTemplate, LLMChain
-from langchain.embeddings.openai import OpenAIEmbeddings
-
-from langchain.chains.base import Chain
-from langchain.chains import RetrievalQA
-
-from langchain.prompts.base import StringPromptTemplate
-from langchain.agents.agent import AgentOutputParser
-from langchain.agents.conversational.prompt import FORMAT_INSTRUCTIONS
-from langchain.schema import AgentAction, AgentFinish
 from salesgpt.agents import Sparkly
-from telebot import types
 
 from salesgpt.photo_analyzer import PhotoAnalyzer
 from salesgpt.photo_questions import PhotoQuestionsGenerator
 from salesgpt.photo_summary import PhotoSummarizer
 
 os.environ['OPENAI_API_KEY'] = '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'
+
 # os.environ["TOKENIZERS_PARALLELISM"] = "false"
-#os.environ['CEREBRIUMAI_API_KEY'] = 'public-5b2449e413f790ce91f6'
 
 questions = [
     "Are there any humans on the photo?",
@@ -44,7 +28,9 @@ questions = [
 
 iterations = 2
 
-#llm = CerebriumAI(endpoint_url="https://run.cerebrium.ai/v2/p-fa7750f1/lamallvm127/predict")
+# llm = CerebriumAI(
+# endpoint_url="https://run.cerebrium.ai/v2/p-fa7750f1/lamallvm127/predict"
+# )
 
 llm_1 = ChatOpenAI(temperature=0.4, model_name='gpt-3.5-turbo')
 llm_2 = ChatOpenAI(temperature=0.1, model_name='gpt-3.5-turbo')
@@ -64,9 +50,11 @@ user_data = {}
 
 bot = telebot.TeleBot('6461197197:AAH9UDhccFZxrOdgAZBADXY0UgK4XTl_WnY')
 
+
 @bot.message_handler(commands=["start"])
 def start(message):
     bot.reply_to(message, "Try me!")
+
 
 @bot.message_handler(content_types=['text'])
 def handle_text(message):
@@ -94,11 +82,14 @@ def handle_text(message):
         bot.send_message(message.chat.id, "Need in story not determined")
 
     if response:
-        bot.send_message(message.chat.id, f'REQUIRED MESSAGE TYPE: {message_type}')
+        bot.send_message(
+            message.chat.id, f'REQUIRED MESSAGE TYPE: {message_type}'
+        )
     else:
         bot.send_message(message.chat.id, "Message type not determined")
 
     print("--------------------")
+
 
 def save_photo(message):
     if not os.path.exists('photos'):
@@ -110,9 +101,9 @@ def save_photo(message):
         new_file.write(downloaded_file)
     return photo_path
 
+
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
-    photo_path = save_photo(message)
 
     photo_info = analyzer.analyze_photo(message, bot, questions)
     photo_qa = analyzer.format_photo_info(photo_info)
@@ -130,10 +121,13 @@ def handle_photo(message):
         print("New QA: ")
         photo_qa += analyzer.format_photo_info(new_qa)
         print("QA after the iteration: ", photo_qa)
-            
+
     photo_summary = summary_generator.create(input=photo_qa)
 
-    user_input = "Take a deep breath and react to my photo with a simple lexicon, in a positive manner. Photo:" + photo_summary
+    user_input = """
+    Take a deep breath and react to my photo with a simple lexicon,
+    in a positive manner. Photo:
+    """ + photo_summary
     agent.human_step(user_input)
 
     response = agent.get_response()
@@ -151,7 +145,7 @@ def handle_photo(message):
     if response:
         bot.send_message(message.chat.id, f'Photo summary: {photo_summary}')
     else:
-        bot.send_message(message.chat.id, "Photo summary not determined") 
+        bot.send_message(message.chat.id, "Photo summary not determined")
 
 
 bot.polling()

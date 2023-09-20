@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 from transformers import (BlipProcessor,
                           BlipForQuestionAnswering)
 from PIL import Image
@@ -15,26 +15,31 @@ app = FastAPI()
 processor_qa = BlipProcessor.from_pretrained("Salesforce/blip-vqa-base")
 model_qa = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base")
 
+
 class Question(BaseModel):
     id: str
     question: str
+
 
 class Query(BaseModel):
     photo_url: str
     questions: List[Question]
 
+
 class Answer(BaseModel):
     id: str
     answer: str
 
+
 class Response(BaseModel):
     answers: List[Answer]
+
 
 @app.post("/analyze_photo", response_model=Response)
 async def analyze_photo(query: Query):
     try:
         response = requests.get(query.photo_url)
-        response.raise_for_status()  
+        response.raise_for_status()
 
         image = Image.open(BytesIO(response.content)).convert('RGB')
         image = np.array(image)
@@ -44,7 +49,10 @@ async def analyze_photo(query: Query):
         for q in query.questions:
             input_data = processor_qa(image, q.question, return_tensors="pt")
             output = model_qa.generate(**input_data)
-            answer_text = processor_qa.decode(output[0], skip_special_tokens=True)
+            answer_text = processor_qa.decode(
+                output[0],
+                skip_special_tokens=True
+                )
 
             answers_list.append({"id": q.id, "answer": answer_text})
 

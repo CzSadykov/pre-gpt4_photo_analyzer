@@ -1,16 +1,13 @@
-from langchain import LLMChain, PromptTemplate
 from transformers import (BlipProcessor,
                           BlipForQuestionAnswering)
 from PIL import Image
 from typing import List
-import torch
-import requests
-import telebot
 import numpy as np
 from io import BytesIO
 
 processor_qa = BlipProcessor.from_pretrained("Salesforce/blip-vqa-base")
 model_qa = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base")
+
 
 class PhotoAnalyzer:
 
@@ -43,6 +40,9 @@ class PhotoAnalyzer:
                 photo_qa[question] = answer
 
         return photo_qa
-    
+
     def format_photo_info(self, photo_qa: dict) -> str:
-        return ''.join(f'Question:{key}\nAnswer:{value}\n' for key, value in photo_qa.items())
+        return ''.join(
+            f'Question:{key}\nAnswer:{value}\n'
+            for key, value in photo_qa.items()
+            )

@@ -1,0 +1,18 @@
+### Test POST request to analyze photo
+POST http://127.0.0.1:8000/analyze_photo
+Content-Type: application/json
+
+{
+    "photo_url": "https://msdesign.blob.core.windows.net/wallpapers/Microsoft_Nostalgic_Windows_Wallpaper_4k.jpg",
+    "questions": [
+        {
+            "id": "some_string_identifier_1",
+            "question": "What is on the photo?"
+        },
+        {
+            "id": "some_string_identifier_2",
+            "question": "What is the mood of the photo?"
+        }
+    ]
+}
+
